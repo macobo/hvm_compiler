@@ -11,3 +11,4 @@ with peg:
     number = ('-?[0-9]+'.r is v) >> Number(int(v))
     list = ('(', (expr is first, (space, expr is rest).rep ).opt, ')') >> List.c(first, rest)
     expr = number | symbol | list
+    program_parser = expr.rep
