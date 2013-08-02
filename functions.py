@@ -12,10 +12,21 @@ def globalFunction(name):
 
 @globalFunction('defun')
 def DefineFunction(env, name, parameters, *body):
-    position = GlobalEnviroment.get("CurrentPosition")
-    function = Function(position, parameters, body)
+    global_position = GlobalEnviroment.get("CurrentPosition")
+    # memory_position - position, where the start of the function
+    # is saved
+    memory_position, save_to_mem = allocate(GlobalEnviroment)
+    function = Function(memory_position, parameters, body)
+
     GlobalEnviroment.set(name, function)
-    return function.skip_body() + function.compiled_body()
+    c_body = function.compiled_body()
+    c_skip = skip_block(c_body)
+
+    start_position = global_position + len(c_skip)
+    s = c_skip + c_body 
+    # after a function declaration, save the start position to mem
+    s+= Number(start_position).compile() + save_to_mem
+    return s
 
 
 @globalFunction('define')
@@ -32,18 +43,19 @@ def DefineVariable(env, name, expr):
 
 
 @globalFunction('if')
-def If(env, condition, body): 
-    compiled_condition = condition.compile(env)
-    compiled_body = body.compile(env)
-    s = compiled_condition # result goes to S0
-    # jump over body if S0
-    s += Number(len(compiled_body)).compile(env) + '?'
-    s += compiled_body
+def IfElse(env, condition, true_branch, false_branch):
+    # CONDITIONAL_JUMP TRUE_BRANCH SKIP_TO_END FALSE_BRANCH
+    c_true = true_branch.compile(env)
+    c_false = false_branch.compile(env)
+
+    skip_to_end = skip_block(c_false)
+
+    s = condition.compile(env)
+    s+= skip_block(c_true + skip_to_end, conditional=True)
+    s+= c_true + skip_to_end + c_false
+    print (condition.compile(env), c_true, c_false)
     return s
 
-
-@globalFunction('ifelse')
-def IfElse(env, condition, true_branch, false_branch): pass
 
 
 @globalFunction('print_num')
@@ -65,3 +77,10 @@ globalFunction("+")(lambda *a: pasteTogether(*a) + "+" * (len(a)-2))
 globalFunction("-")(lambda *a: pasteTogether(*a) + "-" * (len(a)-2))
 globalFunction("*")(lambda *a: pasteTogether(*a) + "*" * (len(a)-2))
 globalFunction("/")(lambda *a: pasteTogether(*a) + "/" * (len(a)-2))
+
+
+def not_equals(env, a, b):
+    return pasteTogether(env, a, b) + ":"
+
+globalFunction("<")(lambda *a: not_equals(*a) + "1-")
+globalFunction(">")(lambda *a: not_equals(*a) + "1+")

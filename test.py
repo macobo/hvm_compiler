@@ -37,6 +37,17 @@ class Parsing(unittest.TestCase):
         self.assertEqual(i(-10), -10)
         self.assertEqual(i(-6660), -6660)
 
+class Enviroments(unittest.TestCase):
+    def test_env(self):
+        A = Enviroment.Local(Enviroment.Nil)
+        B = Enviroment.Local(A)
+        A.set("key",2)
+        self.assertEqual(B.get("key"), 2)
+        B.set("key", 5)
+        self.assertEqual(B.get("key"), 5)
+        self.assertEqual(A.get("key"), 2)
 
-suite = unittest.TestLoader().loadTestsFromTestCase(Parsing)
-unittest.TextTestRunner(verbosity=2).run(suite)
+
+for k in [Parsing, Enviroments]:
+    suite = unittest.TestLoader().loadTestsFromTestCase(k)
+    unittest.TextTestRunner(verbosity=2).run(suite)
