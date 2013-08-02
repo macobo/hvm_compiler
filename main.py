@@ -14,5 +14,7 @@ import eval
 # (> 3 2)
 # """)
 
+print c("(< 1 2)")
+
 import sys
 print c(open(sys.argv[1]).read(), 3)
