@@ -1,5 +1,7 @@
 import macropy.activate     # sets up macro import hooks
 import unittest
+from macropy.quick_lambda import macros, f
+
 
 from eval import *
 from parser import *
@@ -17,11 +19,15 @@ class Parsing(unittest.TestCase):
 
     def test_numbers(self):
         c = lambda n: Number(n).compile({})
+        from helpers import evaluate_number
+        i = lambda n: evaluate_number(c(n))[0]
+
         self.assertEqual(c(0), "0")
         self.assertEqual(c(8), "8")
         self.assertEqual(c(9), "9")
-        self.assertEqual(c(28), "999++1+")
-        self.assertEqual(c(-10), "091+-")
+        self.assertEqual(i(28), 28)
+        self.assertEqual(i(-10), -10)
+        self.assertEqual(i(-6660), -6660)
 
 
 suite = unittest.TestLoader().loadTestsFromTestCase(Parsing)
