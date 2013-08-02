@@ -5,7 +5,7 @@ from helpers import memoize
 @case
 class Symbol(value): 
     def compile(self, env):
-        return env.get(self).position_get_expr(env)
+        return env.get(self).get_value_from_memory(env)
 
 @case
 class List(value): 
@@ -21,7 +21,7 @@ class List(value):
 
 @case
 class Number(value):
-    def compile(self, env):
+    def compile(self, env = None):
         if self.value < 0:
             return "0" + Number(-self.value).compile(env) + "-"
         nines, leftover = divmod(self.value, 9)
@@ -32,14 +32,23 @@ class Number(value):
             result += str(leftover) + "+"
         return result
 
-    def position_get_expr(self, env):
-        return self.compile(env) + "<"
 
 #############################
 
+@case
+class Memory:
+    class Position(value):
+        def compile(self, env):
+            return Number(self.value).compile(env)
+
+        def get_value_from_memory(self, env):
+            return self.compile(env) + "<"
+
+    #class Range(start, end):
+
 def allocate(env, expr = None):
     # We never clean up function calls? Do a set-based solution instead?
-    position = Number(GlobalEnviroment.get('CurrentCell'))
+    position = Memory.Position(GlobalEnviroment.get('CurrentCell'))
     GlobalEnviroment.set('CurrentCell', position.value + 1)
     if expr is None:
         # pop from stack
@@ -51,15 +60,22 @@ def allocate(env, expr = None):
 @case
 class Function(start_position, param_names, body):
     assert len(body) > 0
-    self.compiled_body = ""
+    self._compiled_body = ""
     self.env = Enviroment.Local(GlobalEnviroment)
 
-    def update_body(self):
+    def compiled_body(self):
+        if self._compiled_body != "":
+            return self._compiled_body
         for param in reversed(self.param_names.value):
             position, compiled_expr = allocate(self.env)
             self.env.set(param, position)
-            self.compiled_body += compiled_expr
-        self.compiled_body += "".join(e.compile(self.env) for e in self.body)
+            self._compiled_body += compiled_expr
+        self._compiled_body += "".join(e.compile(self.env) for e in self.body)
+        return self._compiled_body
+
+    def skip_body(self):
+        c_body = self.compiled_body()
+        return Number(len(c_body)).compile() + "g"
 
     def compile_call(self, args):
         # 1. push all args
