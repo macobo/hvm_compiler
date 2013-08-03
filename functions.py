@@ -145,8 +145,9 @@ def not_(env, a):
 
 
 @globalFunction("!=")
+@compile_args
 def not_equals(env, a, b):
-    return pasteTogether(env, a, b) + ":"
+    return a + b + ":"
 
 globalFunction("<=")(lambda *a: not_equals(*a) + "1+")
 globalFunction(">=")(lambda *a: not_equals(*a) + "1-")

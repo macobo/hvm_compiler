@@ -20,9 +20,11 @@ class Parsing(unittest.TestCase):
     def test_program_parsing(self):
         target = [
             List([Symbol("define"), Symbol("a"), Number(12)]),
+            List([]),
             List([Symbol("print_num"), Symbol("a")])
         ]
         self.assertEqual(program_parser.parse("""(define a 12)
+;; comment
 (print_num a)
 """), target)
 

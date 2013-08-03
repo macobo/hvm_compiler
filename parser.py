@@ -10,5 +10,8 @@ with peg:
     symbol = '[0-9a-zA-Z-?!*+/><=_]+'.r // Symbol
     number = ('-?[0-9]+'.r is v) >> Number(int(v))
     list = ('(', space, expr.rep_with(space) is e, space, ')') >> List(e)
-    expr = number | symbol | list
+    expr = number | symbol | list | comment
+
+
+    comment = (space,';;[^\n]*\n'.r) >> List([])
     program_parser = (space, expr.rep_with(space), space) // f[_[1]]
