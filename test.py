@@ -35,7 +35,7 @@ class Parsing(unittest.TestCase):
         self.assertEqual(c(9), "9")
         self.assertEqual(i(28), 28)
         self.assertEqual(i(-10), -10)
-        self.assertEqual(i(-6660), -6660)
+        self.assertEqual(i(-660), -660)
 
 class Enviroments(unittest.TestCase):
     def test_env(self):

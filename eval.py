@@ -1,6 +1,6 @@
 from macropy.case_classes import macros, case
 
-from helpers import memoize
+from helpers import fastest
 import pprint
 
 @case
@@ -31,13 +31,8 @@ class Number(value):
     def compile(self, env = None):
         if self.value < 0:
             return "0" + Number(-self.value).compile(env) + "-"
-        nines, leftover = divmod(self.value, 9)
-        if not nines: 
-            return str(leftover)
-        result = "9" * nines + '+' * (nines-1)
-        if leftover: 
-            result += str(leftover) + "+"
-        return result
+
+        return fastest(self.value)
 
 
 #############################
@@ -137,7 +132,7 @@ class Enviroment():
 GlobalEnviroment = Enviroment.Local(Enviroment.Nil())
 
 #############################
-def compile(program, startCell = 500):
+def compiler(program, startCell = 500):
     from parser import program_parser
     from functions import *
     global GlobalEnviroment
@@ -149,5 +144,5 @@ def compile(program, startCell = 500):
         GlobalEnviroment.set('CurrentPosition', len(result))
         #pprint.pprint(GlobalEnviroment._mapping)
         result += expr.compile(GlobalEnviroment) 
-        #result += "    "
+        result += " "*8
     return result

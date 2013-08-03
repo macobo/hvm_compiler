@@ -23,3 +23,23 @@ def evaluate_number(x):
         else:               
             stack.append(int(token))
     return tuple(stack)
+
+
+MAX = (float("inf"), "-"*9990)
+def fastest(n, depth = 0, cache = {}):
+    if n in range(10): 
+        return "" if n == 0 and depth else str(n)
+    if n not in cache:
+        s = lambda x: (len(x), x)
+        cache[n] = s("9" + fastest(n-9, depth+1) + "+")
+        for i in range(1, 10):
+            cache[n] = min(cache[n], 
+                            s(str(i) + fastest(n-i, depth+1) + "+"))
+            try:
+                if depth>2: cache[n] = min(cache[n], s(str(i) + fastest(n+i, depth+1) + "-"))
+            except: pass
+            if i > 1 and n % i == 0:
+                cache[n] = min(cache[n], s(str(i) + fastest(n/i, depth+1) + "*"))
+    return cache[n][1]
+
+for i in range(20000): fastest(i)
