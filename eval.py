@@ -144,5 +144,5 @@ def compiler(program, startCell = 500):
         GlobalEnviroment.set('CurrentPosition', len(result))
         #pprint.pprint(GlobalEnviroment._mapping)
         result += expr.compile(GlobalEnviroment) 
-        result += " "*8
+        #result += " "*8
     return result

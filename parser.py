@@ -1,4 +1,4 @@
-from macropy.peg import macros, peg
+from macropy.peg import macros, peg, cut
 from macropy.quick_lambda import macros, f
 from macropy.tracing import macros, require
 
@@ -10,8 +10,8 @@ with peg:
     symbol = '[0-9a-zA-Z-?!*+/><=_]+'.r // Symbol
     number = ('-?[0-9]+'.r is v) >> Number(int(v))
     list = ('(', space, expr.rep_with(space) is e, space, ')') >> List(e)
-    expr = number | symbol | list | comment
+    string = ('"', '[^"]*'.r, '"') // f[_[1]]
+    expr = number | symbol | list | string | comment
 
-
-    comment = (space,';;[^\n]*\n'.r) >> List([])
+    comment = '[^\n]*;[^\n]*\n'.r >> List([])
     program_parser = (space, expr.rep_with(space), space) // f[_[1]]

@@ -28,6 +28,10 @@ class Parsing(unittest.TestCase):
 (print_num a)
 """), target)
 
+    def test_string(self):
+        target = "Hello!"
+        self.assertEqual(string.parse('"Hello!"'), target)
+
     def test_numbers(self):
         c = lambda n: Number(n).compile({})
         i = lambda n: evaluate_number(c(n))[0]

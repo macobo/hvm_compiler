@@ -109,6 +109,9 @@ def IfElse(env, condition, true_branch, false_branch = None):
 def printNumber(env, number):
     return number + "p"
 
+@globalFunction('print_string')
+def printString(env, data):
+    return "".join(compile(Number(ord(x)), env)+"P" for x in data)
 
 
 @globalFunction('mem')
@@ -123,6 +126,10 @@ def getMemoryAtPosition(env, memory_pos):
 def getMemoryAtPosition(env, memory_pos, value):
     return value + memory_pos + ">"
 
+@globalFunction('SetMemoryStart')
+def setMemoryStart(env, position):
+    GlobalEnviroment.set('CurrentCell', position.value)
+    return ""
 
 @globalFunction('block')
 def block(env, *body):
@@ -149,7 +156,7 @@ def not_(env, a):
 def not_equals(env, a, b):
     return a + b + ":"
 
-globalFunction("<=")(lambda *a: not_equals(*a) + "1+")
-globalFunction(">=")(lambda *a: not_equals(*a) + "1-")
+globalFunction(">=")(lambda *a: not_equals(*a) + "1+")
+globalFunction("<=")(lambda *a: not_equals(*a) + "1-")
  
 globalFunction("=")(lambda e, a, b: not_(e, not_equals(e, a, b)))
