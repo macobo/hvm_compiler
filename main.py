@@ -8,11 +8,37 @@ import os
 def c(string):
     result = compiler(string)
     os.popen('xclip -selection c', 'w').write(result)
+    print
     return result
 
-print c("""(print_string "Hello!\nWorld")""")
+print c("""
+(defun recursion (a)
+    (print_string "beginning recursion ")
+    (print_num a)
+    (print_string "\n")
+    (if (<= a 3)
+        (recursion (+ a 1)))
+    (print_string "ending recursion ")
+    (print_num a)
+    (print_string "\n"))
+(recursion 0)
+""")
+
+print c("""
+(SetMemoryStart 0)
+(define x 0)
+(do_while (<= x 3) 
+    (print_num x)
+    (define x (+ x 1)))
+""")
+
+print c("""
+(and (>= 2 1) (<= 3 4) (<= 3 4))
+""")
 
 import sys
 if len(sys.argv) > 1:
-    print
-    print c(open(sys.argv[1]).read())
+    result = c(open(sys.argv[1]).read())
+    print result
+    if len(sys.argv) == 3:
+        open(sys.argv[2], "w").write(result)

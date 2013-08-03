@@ -8,7 +8,7 @@ class Symbol(value):
     def compile(self, env):
         position = env.get(self)
         value = position.get_value_from_memory(env)
-        print "\t", self, " - Getting from memory pos",position,":", value
+        #print "\t", self, " - Getting from memory pos",position,":", value
         return value
 
 @case
@@ -20,7 +20,7 @@ class List(value):
     def compile(self, env):
         if not self.value: return ""
         name, args = self.value[0], self.value[1:]
-        print "Calling",name.value,"with",args
+        #print "Calling",name.value,"with",args
         # what if we don't know that function yet? 
         return env.get(name).compile_call(env, *args)
 
@@ -78,10 +78,10 @@ class Function(start_position, param_names, body):
             position, compiled_expr = allocate(self.env)
             self.env.set(param, position)
             self._compiled_body += compiled_expr
-        print "\tparams-part", self._compiled_body
+        #print "\tparams-part", self._compiled_body
         self._compiled_body += "".join(e.compile(self.env) for e in self.body)
         self._compiled_body += "$"
-        print "\tcompiled to", self._compiled_body
+        #print "\tcompiled to", self._compiled_body
 
         return self._compiled_body
 
@@ -112,7 +112,7 @@ class Enviroment():
 
         def set(self, what, value):
             self._mapping[str(what)] = value
-            print "Setting", what, "to", value, self==GlobalEnviroment
+            #print "Setting", what
 
         def get_env(self, what):
             if what in self._mapping: 

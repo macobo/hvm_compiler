@@ -103,6 +103,27 @@ def IfElse(env, condition, true_branch, false_branch = None):
     s+= c_true + skip_to_end + c_false
     return s
 
+@globalFunction("do_while")
+@compile_args
+def do_while(env, condition, *body):
+    # body, condition, conditional jump to start
+    # This needs balancing, since the length of the jump
+    # depends on the length of the jump block.
+    # lower bound on length is body+condition+4 (09-g)
+    # start trying from lower bound until len(body+cond+jump_block) <= lower_bound,
+    # pad the jump block with spaces if neccessary
+    body = "".join(body)
+    condition = not_(env, condition)
+    body_len = len(body) + len(condition)
+    jump_block = lambda x: compile(Number(-x)) + "?"
+    #print "%s (%d), %s (%d)" % (body, len(body), condition, len(condition))
+    from itertools import count
+    for jump_length in count(body_len + 4):
+        spaces_needed = jump_length - (body_len + len(jump_block(jump_length)))
+        #print "Jump length %d, jumper: %s, need %d extra spaces" % (jump_length, jump_block(jump_length), spaces_needed)
+        if spaces_needed >= 0:
+            return body + condition + " " * spaces_needed + jump_block(jump_length)
+
 
 @globalFunction('print_num')
 @compile_args
@@ -112,6 +133,14 @@ def printNumber(env, number):
 @globalFunction('print_string')
 def printString(env, data):
     return "".join(compile(Number(ord(x)), env)+"P" for x in data)
+
+@globalFunction('print')
+def printer(env, *args):
+    def mapper(arg):
+        if isinstance(arg, str): 
+            return printString(env, arg)
+        return printNumber(env, arg)
+    return "".join(mapper(a) for a in args)
 
 
 @globalFunction('mem')
@@ -131,7 +160,7 @@ def setMemoryStart(env, position):
     GlobalEnviroment.set('CurrentCell', position.value)
     return ""
 
-@globalFunction('block')
+@globalFunction('begin')
 def block(env, *body):
     childenv = Enviroment.Local(env)
     return "".join(compile(e, childenv) for e in body)
@@ -160,3 +189,10 @@ globalFunction(">=")(lambda *a: not_equals(*a) + "1+")
 globalFunction("<=")(lambda *a: not_equals(*a) + "1-")
  
 globalFunction("=")(lambda e, a, b: not_(e, not_equals(e, a, b)))
+
+@globalFunction("and")
+def and_(env, *a):
+    if len(a) == 2: 
+        x, y = a
+        return IfElse(env, x, y, Number(0))
+    return IfElse(env, a[0], and_(env, *a[1:]), Number(0))
