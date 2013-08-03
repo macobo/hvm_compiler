@@ -3,7 +3,7 @@ from macropy.case_classes import macros, case
 
 def globalFunction(name):
     """ Wrap a globally defined function. 
-        Each such function should return compiled_fun: string """
+        Each such function should return a compiled string """
     def wrap(f):
         wrap.compile_call = f
         GlobalEnviroment.set(Symbol(name), wrap)
@@ -14,6 +14,43 @@ def compile(expr, *args):
     if isinstance(expr, str):
         return expr
     return expr.compile(*args)
+
+def compile_args(dont_compile):
+    """
+    Decorator that does the tedious job of compiling arguments for you.
+    The first argument (Enviroment) is automatically skipped.
+
+    This means can replace this:
+        def add(env, a, b):
+            compiled_a = compile(a, env)
+            compiled_b = compile(b, env)
+            return compiled_a + compiled_b + "+"
+
+    With:
+        @compile_args
+        def add(env, a, b):
+            return a + b + "+"
+
+    You can also define it to skip other arguments:
+
+        @compile_args(dont_compile=[3])
+        def f(env, compiled_a, compiled_b, not_compiled): ...
+    """
+    def compile_args(args):
+        env = args[0]
+        return [a if i in dont_compile else compile(a, env) for i, a in enumerate(args)]
+
+    def call(f):
+        def _inner_call(*args):
+            return f(*compile_args(args))
+        return _inner_call
+
+    if isinstance(dont_compile, list):
+        dont_compile = set(dont_compile + [0]) # do not compile env
+        return call
+    # got a function directly
+    f, dont_compile = dont_compile, set([0])
+    return call(f)
 
 
 @globalFunction('defun')
@@ -49,6 +86,7 @@ def DefineVariable(env, name, expr):
 
 
 @globalFunction('if')
+@compile_args(dont_compile=[3])
 def IfElse(env, condition, true_branch, false_branch = None):
     # condition - 0 is false, anything else is True
     # CONDITIONAL_JUMP TRUE_BRANCH SKIP_TO_END FALSE_BRANCH
@@ -66,21 +104,24 @@ def IfElse(env, condition, true_branch, false_branch = None):
     return s
 
 
-
 @globalFunction('print_num')
+@compile_args
 def printNumber(env, number):
-    return compile(number, env) + "p"
+    return number + "p"
+
 
 
 @globalFunction('mem')
-def getMemoryAtPosition(env, pos_expr):
-    memory_pos = compile(pos_expr, env)
+@compile_args
+def getMemoryAtPosition(env, memory_pos):
     return memory_pos + "<"
 
 
+
 @globalFunction('setmem')
-def getMemoryAtPosition(env, pos_expr, value):
-    return compile(value, env) + compile(pos_expr, env) + ">"
+@compile_args
+def getMemoryAtPosition(env, memory_pos, value):
+    return value + memory_pos + ">"
 
 
 @globalFunction('block')
