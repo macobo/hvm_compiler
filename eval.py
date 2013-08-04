@@ -145,4 +145,5 @@ def compiler(program, startCell = 500):
         #pprint.pprint(GlobalEnviroment._mapping)
         result += expr.compile(GlobalEnviroment) 
         #result += " "*8
+    print GlobalEnviroment.get('CurrentCell')
     return result

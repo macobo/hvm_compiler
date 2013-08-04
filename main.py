@@ -33,7 +33,7 @@ print c("""
 """)
 
 print c("""
-(and (>= 2 1) (<= 3 4) (<= 3 4))
+(or 1 0)
 """)
 
 import sys

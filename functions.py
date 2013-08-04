@@ -166,6 +166,12 @@ def block(env, *body):
     return "".join(compile(e, childenv) for e in body)
 
 
+@globalFunction('exit')
+def exit(env): return "!"
+
+@globalFunction('raw_hvm')
+def raw_hvm(env, arg): return arg
+
 #### Arithmetic
 
 pasteTogether = lambda env, *args: "".join(compile(arg, env) for arg in args)
@@ -196,3 +202,11 @@ def and_(env, *a):
         x, y = a
         return IfElse(env, x, y, Number(0))
     return IfElse(env, a[0], and_(env, *a[1:]), Number(0))
+
+
+@globalFunction("or")
+def or_(env, *a):
+    if len(a) == 2: 
+        x, y = a
+        return IfElse(env, x, Number(1), y)
+    return IfElse(env, a[0], Number(1), or_(env, *a[1]))
