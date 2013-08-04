@@ -1,36 +1,38 @@
 import macropy.activate     # sets up macro import hooks
 import unittest
 
-from eval import *
 from parser import *
 
 from helpers import evaluate_number
 
 class Parsing(unittest.TestCase):
-    def test_expr_parsing(self):
-        target = List([
-            List([Number(1)]), 
-            Number(2),
-            Symbol("helloWorld"),
-            Number(-3),
-            List([])
-        ])
-        self.assertEqual(expr.parse("((1) 2 helloWorld -3 ())"), target)
-
     def test_program_parsing(self):
-        target = [
-            List([Symbol("define"), Symbol("a"), Number(12)]),
-            List([]),
-            List([Symbol("print_num"), Symbol("a")])
+        expected = [
+            Label("beginning"),
+            Command(Symbol("hello"), [Symbol("world"), Number(1), Number(2), Number(3)]),
+            Command(Symbol("blah"), [])
         ]
-        self.assertEqual(program_parser.parse("""(define a 12)
-;; comment
-(print_num a)
-"""), target)
+        self.assertEqual(expected, parse_program("""
+beginning:
+    hello world 1 2 3;
+    // some comment
+    blah;
+"""))
+
+    def test_command_parsing(self):
+        target = Command(Symbol("hello"), [
+            Symbol("world"),
+            Number(1),
+            Number(2),
+            Number(-3)
+        ])
+        self.assertEqual(command.parse("hello world 1 2 -3;"), target)
+        
 
     def test_string(self):
         target = "Hello!"
         self.assertEqual(string.parse('"Hello!"'), target)
+
 
     def test_numbers(self):
         c = lambda n: Number(n).compile({})
@@ -43,17 +45,7 @@ class Parsing(unittest.TestCase):
         self.assertEqual(i(-10), -10)
         self.assertEqual(i(-660), -660)
 
-class Enviroments(unittest.TestCase):
-    def test_env(self):
-        A = Enviroment.Local(Enviroment.Nil)
-        B = Enviroment.Local(A)
-        A.set("key",2)
-        self.assertEqual(B.get("key"), 2)
-        B.set("key", 5)
-        self.assertEqual(B.get("key"), 5)
-        self.assertEqual(A.get("key"), 2)
 
-
-for k in [Parsing, Enviroments]:
+for k in [Parsing]:
     suite = unittest.TestLoader().loadTestsFromTestCase(k)
     unittest.TextTestRunner(verbosity=2).run(suite)
