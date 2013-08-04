@@ -3,8 +3,13 @@ from macropy.case_classes import macros, case
 
 from parser import *
 
+from helpers import fastest
+
 @case
-class CompileEnviroment(mapping | {}):
+class CompileEnviroment(mapping | None):
+    if self.mapping is None:
+        self.mapping = {}
+
     def get(self, element):
         if element not in self.mapping:
             raise ValueError("Could not find "+str(element))
@@ -27,4 +32,20 @@ def compile(env, ast_element):
     # TODO: do we want to do this?
     if isinstance(ast_element, str):
         return ast_element
+    if isinstance(ast_element, int):
+        c = fastest(ast_element)
+        return "0" + c + "-" if ast_element < 0 else c
     return ast_element.compile(env)
+
+
+def compile_program(program_text):
+    from functions import register_functions
+
+    env = CompileEnviroment()
+    register_functions(env)
+
+    result = ""
+    for command in parse_program(program_text):
+        env.compile_position = len(result)
+        result += compile(env, command)
+    return result

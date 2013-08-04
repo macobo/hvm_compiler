@@ -2,15 +2,13 @@ from macropy.peg import macros, peg, cut
 from macropy.quick_lambda import macros, f
 from macropy.case_classes import macros, case
 
-from helpers import fastest
-
 @case
 class Symbol(value): pass
 
 @case
 class Label(value): 
     def compile(self, env):
-        env.set(self, env.current_position)
+        env.set(self, env.compile_position)
 
 @case
 class Number(value):
@@ -24,9 +22,9 @@ class Command(name, args | None):
     if self.args is None: 
         self.args = []
 
-
-
-    class Noop: pass
+    def compile(self, env):
+        function = env.get(name)
+        return function(*args)
 
 
 # lisp grammar
@@ -35,7 +33,7 @@ with peg:
     space = '\s*'.r
 
     symbol = '[0-9a-zA-Z-?!*+/><=_]+'.r // Symbol
-    number = ('-?[0-9]+'.r is v) >> Number(int(v))
+    number = '-?[0-9]+'.r  // int
     label  = (symbol is s, ':') >> Label(s.value)
     string = ('"', '[^"]*'.r, '"') // f[_[1]]
 
